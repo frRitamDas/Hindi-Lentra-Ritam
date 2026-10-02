@@ -11,6 +11,10 @@ var SITE = 'https://bingr.one'
 var UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36'
 var SERVER_TIMEOUT = 15000
 var DETAILS_TIMEOUT = 10000
+// Grace period kept open after the first server answers: slower servers may
+// still land usable sources during this window, but we never block on the
+// slowest of them (which can take the full SERVER_TIMEOUT).
+var DRAIN_MS = 1500
 var MAX_STREAMS = 12
 
 // Active servers on bingr.one — priority order matches the site's own cascade
@@ -161,6 +165,62 @@ function buildHeaders(srcHeaders) {
   return headers
 }
 
+// Wait for the per-server requests, but only for DRAIN_MS past the first answer.
+// Bingr's servers respond at wildly different speeds and Promise.all() blocks on
+// the slowest one, so a single hung server delays playback by up to
+// SERVER_TIMEOUT even though a good source already arrived. Results keep their
+// original index so server priority ordering is unaffected.
+function drainAll(jobs) {
+  return new Promise(function (resolve) {
+    var results = []
+    var settled = 0
+    var timer = null
+    var finished = false
+    var i
+
+    for (i = 0; i < jobs.length; i++) results.push(null)
+
+    function finish(reason) {
+      if (finished) return
+      finished = true
+      if (timer) clearTimeout(timer)
+      var pending = jobs.length - settled
+      if (pending > 0) {
+        console.log('[Bingr] ' + reason + ' — returning with ' + pending +
+          ' server request(s) abandoned')
+      }
+      resolve(results)
+    }
+
+    function onSettled() {
+      settled++
+      if (settled === jobs.length) {
+        finish('all servers answered')
+      } else if (settled === 1 && jobs.length > 1) {
+        // First answer opens the drain window for everyone still in flight.
+        timer = setTimeout(function () {
+          finish('drain window (' + DRAIN_MS + 'ms) elapsed')
+        }, DRAIN_MS)
+      }
+    }
+
+    for (i = 0; i < jobs.length; i++) {
+      (function (index) {
+        Promise.resolve(jobs[index]).then(function (res) {
+          results[index] = res || null
+          onSettled()
+        }, function () {
+          // requestServer() already swallows its own errors; stay defensive.
+          results[index] = null
+          onSettled()
+        })
+      })(i)
+    }
+
+    if (jobs.length === 0) finish('no servers to query')
+  })
+}
+
 function getStreams(tmdbId, mediaType, season, episode) {
   if (!tmdbId) return Promise.resolve([])
   mediaType = mediaType === 'tv' ? 'tv' : 'movie'
@@ -173,7 +233,7 @@ function getStreams(tmdbId, mediaType, season, episode) {
       var jobs = SERVERS.map(function (server) {
         return requestServer(server, tmdbId, mediaType, season, episode, meta.title, meta.year)
       })
-      return Promise.all(jobs)
+      return drainAll(jobs)
     })
     .then(function (results) {
       var streams = []
