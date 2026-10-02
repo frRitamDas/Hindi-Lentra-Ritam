@@ -16,6 +16,7 @@ Hindi compiled plugins for Nuvio.
 | Provider | Language | Quality | NuvioApp | NuvioTV |
 |---|---|---|---|---|
 | [![allmovieland.png](https://i.postimg.cc/tTv34Wz4/allmovieland.png)](https://postimg.cc/S282ZX5B) AllMovieLand | 🏴󠁧󠁢󠁥󠁮󠁧󠁿 🇮🇳 | 1080p / 720p | ✅ | ✅ |
+| [![bingr.png](https://bingr.one/brand/logo.png)](https://bingr.one) Bingr | 🇺🇸 🇮🇳 | 1080p / 720p / 480p | ✅ | ✅ |
 | [![cinemacity.png](https://i.postimg.cc/G2gFmGj9/cinemacity.png)](https://postimg.cc/dkdkW7pK) CinemaCity | 🏴󠁧󠁢󠁥󠁮󠁧󠁿 🇮🇳 | 1080p / 720p | ✅ | ✅ |
 | [![cinestream.png](https://i.postimg.cc/k4YQgKy5/cinestream.png)](https://postimg.cc/yg9gfJtq) CineStream | 🏴󠁧󠁢󠁥󠁮󠁧󠁿 🇮🇳 | 4K/ 1080p / 720p | ✅ | ✅ |
 | [![HDMovie2.png](https://i.postimg.cc/85XRzMbF/HDMovie2.png)](https://postimg.cc/FdcdPf8m) HDMovie2 |  🇮🇳 | 1080p / 720p | ✅ | ✅ |
